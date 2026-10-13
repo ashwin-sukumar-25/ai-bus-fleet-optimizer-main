@@ -39,18 +39,71 @@ code, kbd, samp, pre, .font-mono {
     box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.35);
 }
 
+/* Smooth custom select dropdown styling */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23818cf8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-position: right 0.85rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+    padding-right: 2.5rem !important;
+    border-radius: 0.875rem !important;
+    border: 1px solid rgba(51, 65, 85, 0.8) !important;
+    background-color: #0b1120 !important;
+    color: #f1f5f9 !important;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+}
+
+select:hover {
+    border-color: rgba(99, 102, 241, 0.5) !important;
+    background-color: #0e1628 !important;
+}
+
+select:focus {
+    outline: none !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+}
+
+select option {
+    background-color: #0f172a;
+    color: #f1f5f9;
+    padding: 0.625rem 1rem;
+}
+
+/* Smooth input styling */
+input[type="text"], input[type="number"], input[type="time"] {
+    border-radius: 0.875rem;
+    border: 1px solid rgba(51, 65, 85, 0.8);
+    background-color: #0b1120;
+    color: #f1f5f9;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input[type="text"]:focus, input[type="number"]:focus, input[type="time"]:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+/* Canvas styling */
+#fleetMapCanvas, #stopsGraphCanvas {
+    background: radial-gradient(circle at 50% 50%, #0b1120 0%, #030712 100%);
+    touch-action: none;
+}
+
 /* Details arrow animation */
 details > summary {
     list-style: none;
 }
 details > summary::-webkit-details-marker {
     display: none;
-}
-
-/* Canvas styling */
-#fleetMapCanvas {
-    background: radial-gradient(circle at 50% 50%, #0b1120 0%, #030712 100%);
-    touch-action: none;
 }
 
 /* Print Manifest Styling */

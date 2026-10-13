@@ -1,6 +1,7 @@
 /**
- * Interactive 2D Fleet Route Map
- * High-performance HTML5 Canvas renderer for depot hubs, stops, route vectors, and vehicle simulation.
+ * Interactive Fleet Route Visualizer
+ * HTML5 Canvas renderer with bus-specific isolation, smooth simulation,
+ * turn-by-turn stop sequence highlights, and road network backdrop.
  */
 const FleetMap = {
     canvas: null,
@@ -75,8 +76,7 @@ const FleetMap = {
         if (btnSimulate) btnSimulate.addEventListener("click", () => this.toggleSimulation());
         if (filterSelect) {
             filterSelect.addEventListener("change", (e) => {
-                AppState.filterRouteBusId = e.target.value;
-                this.render();
+                this.selectBusFilter(e.target.value);
             });
         }
     },
@@ -89,6 +89,7 @@ const FleetMap = {
         this.canvas.height = (rect.height || 540) * dpr;
         this.canvas.style.width = `${rect.width}px`;
         this.canvas.style.height = `${rect.height || 540}px`;
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.scale(dpr, dpr);
         this.render();
     },
@@ -111,7 +112,7 @@ const FleetMap = {
     worldToScreen(x, y) {
         return {
             x: this.offsetX + x * this.scale,
-            y: this.offsetY - y * this.scale // Invert Y so positive is up
+            y: this.offsetY - y * this.scale
         };
     },
 
@@ -127,7 +128,15 @@ const FleetMap = {
         const depot = { x: AppState.constraints.depot_x || 0, y: AppState.constraints.depot_y || 0 };
         points.push(depot);
 
-        AppState.stops.forEach(s => points.push({ x: Number(s.x || 0), y: Number(s.y || 0) }));
+        const activeFilter = AppState.filterRouteBusId || "all";
+        if (activeFilter !== "all" && AppState.results && AppState.results.routes) {
+            const r = AppState.results.routes.find(route => route.bus_id === activeFilter);
+            if (r && r.itinerary) {
+                r.itinerary.forEach(wp => points.push({ x: Number(wp.x || 0), y: Number(wp.y || 0) }));
+            }
+        } else {
+            AppState.stops.forEach(s => points.push({ x: Number(s.x || 0), y: Number(s.y || 0) }));
+        }
 
         if (points.length === 0) return;
 
@@ -139,14 +148,14 @@ const FleetMap = {
             maxY = Math.max(maxY, p.y);
         });
 
-        const spanX = Math.max(4, (maxX - minX) * 1.4);
-        const spanY = Math.max(4, (maxY - minY) * 1.4);
+        const spanX = Math.max(5, (maxX - minX) * 1.4);
+        const spanY = Math.max(5, (maxY - minY) * 1.4);
 
         const w = this.canvas.clientWidth || 800;
         const h = this.canvas.clientHeight || 540;
 
         this.scale = Math.min(w / spanX, h / spanY);
-        this.scale = Math.max(12, Math.min(70, this.scale));
+        this.scale = Math.max(12, Math.min(65, this.scale));
 
         const midX = (minX + maxX) / 2;
         const midY = (minY + maxY) / 2;
@@ -158,11 +167,22 @@ const FleetMap = {
         this.render();
     },
 
+    selectBusFilter(busId) {
+        AppState.filterRouteBusId = busId;
+        const select = document.getElementById("mapBusFilter");
+        if (select) select.value = busId;
+
+        // Update pills
+        this.renderBusFilterPills();
+        this.updateFocusedBusCard();
+        this.fitToData();
+    },
+
     populateBusFilter() {
         const select = document.getElementById("mapBusFilter");
         if (!select) return;
 
-        const currentVal = select.value;
+        const currentVal = AppState.filterRouteBusId || "all";
         select.innerHTML = `<option value="all">All Bus Routes</option>`;
 
         if (AppState.results && AppState.results.routes) {
@@ -170,8 +190,84 @@ const FleetMap = {
                 select.innerHTML += `<option value="${r.bus_id}">${r.bus_name} (${r.students} students)</option>`;
             });
         }
+        select.value = currentVal;
+        this.renderBusFilterPills();
+        this.updateFocusedBusCard();
+    },
 
-        select.value = currentVal || "all";
+    renderBusFilterPills() {
+        const container = document.getElementById("mapBusPillsContainer");
+        if (!container) return;
+
+        const activeId = AppState.filterRouteBusId || "all";
+        let html = `
+            <button type="button" onclick="FleetMap.selectBusFilter('all')" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeId === 'all' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'}">
+                All Buses
+            </button>
+        `;
+
+        if (AppState.results && AppState.results.routes) {
+            AppState.results.routes.forEach(r => {
+                const isSelected = activeId === r.bus_id;
+                html += `
+                    <button type="button" onclick="FleetMap.selectBusFilter('${r.bus_id}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${isSelected ? 'text-white shadow-md' : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'}" style="${isSelected ? `background-color: ${r.color}` : ''}">
+                        <span class="w-2 h-2 rounded-full" style="background-color: ${r.color}"></span>
+                        <span>${r.bus_name}</span>
+                    </button>
+                `;
+            });
+        }
+        container.innerHTML = html;
+    },
+
+    updateFocusedBusCard() {
+        const card = document.getElementById("mapFocusedBusCard");
+        if (!card) return;
+
+        const activeId = AppState.filterRouteBusId || "all";
+        if (activeId === "all" || !AppState.results || !AppState.results.routes) {
+            card.classList.add("hidden");
+            return;
+        }
+
+        const route = AppState.results.routes.find(r => r.bus_id === activeId);
+        if (!route) {
+            card.classList.add("hidden");
+            return;
+        }
+
+        card.classList.remove("hidden");
+        card.innerHTML = `
+            <div class="flex items-center justify-between gap-4 pb-2.5 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full" style="background-color: ${route.color}"></div>
+                    <span class="text-sm font-bold text-white">${route.bus_name}</span>
+                    <span class="text-xs px-2 py-0.5 rounded bg-slate-800 font-mono text-slate-300">${route.bus_id}</span>
+                </div>
+                <button type="button" onclick="FleetMap.selectBusFilter('all')" class="text-xs text-slate-400 hover:text-white">
+                    Show All
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-xs pt-2.5">
+                <div>
+                    <span class="text-slate-400 block">Students</span>
+                    <strong class="text-white text-sm">${route.students} / ${route.capacity}</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block">Distance</span>
+                    <strong class="text-white text-sm">${route.distance} km</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block">Fuel Est.</span>
+                    <strong class="text-white text-sm">${route.fuel_consumed_liters} L</strong>
+                </div>
+            </div>
+            <div class="pt-2 text-[11px] text-slate-400 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                <span>Driver: <strong class="text-slate-200">${route.driver_name}</strong></span>
+                <span>•</span>
+                <span>Stops: <strong class="text-slate-200">${route.stops.length}</strong></span>
+            </div>
+        `;
     },
 
     handleHover(e) {
@@ -182,7 +278,7 @@ const FleetMap = {
         let found = null;
         const depot = {
             id: "depot",
-            name: AppState.constraints.depot_name || "College Main Campus",
+            name: AppState.constraints.depot_name || "Campus Main Hub",
             x: AppState.constraints.depot_x || 0,
             y: AppState.constraints.depot_y || 0,
             isDepot: true
@@ -193,7 +289,7 @@ const FleetMap = {
         for (const item of allItems) {
             const pos = this.worldToScreen(item.x, item.y);
             const dist = Math.hypot(mx - pos.x, my - pos.y);
-            if (dist < 14) {
+            if (dist < 16) {
                 found = { item, screenPos: pos };
                 break;
             }
@@ -212,7 +308,7 @@ const FleetMap = {
 
         if (this.isSimulating) {
             if (btn) {
-                btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i> Pause Simulation`;
+                btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i> Pause Flow`;
                 btn.className = btn.className.replace("bg-slate-800", "bg-indigo-600");
             }
             this.startSimulationLoop();
@@ -252,16 +348,19 @@ const FleetMap = {
         // Background subtle grid
         this.drawGrid(w, h);
 
-        // Draw Route Vectors
+        // Draw background road network paths
+        this.drawRoadNetwork();
+
+        // Draw Optimized Route Vectors
         this.drawRoutes();
 
         // Draw Pickup Stop Nodes
         this.drawStops();
 
-        // Draw Central College Hub
+        // Draw Central Campus Depot Hub
         this.drawDepot();
 
-        // Draw Simulated Moving Buses
+        // Draw Simulated Moving Buses (strictly respecting filter)
         if (this.isSimulating && AppState.results && AppState.results.routes) {
             this.drawSimulatedVehicles();
         }
@@ -275,7 +374,7 @@ const FleetMap = {
     drawGrid(w, h) {
         const ctx = this.ctx;
         ctx.save();
-        ctx.strokeStyle = "rgba(51, 65, 85, 0.25)";
+        ctx.strokeStyle = "rgba(51, 65, 85, 0.2)";
         ctx.lineWidth = 1;
 
         const gridSize = this.scale;
@@ -288,7 +387,6 @@ const FleetMap = {
             ctx.lineTo(x, h);
             ctx.stroke();
         }
-
         for (let y = startY; y < h; y += gridSize) {
             ctx.beginPath();
             ctx.moveTo(0, y);
@@ -296,9 +394,8 @@ const FleetMap = {
             ctx.stroke();
         }
 
-        // Draw subtle origin crosshairs (0, 0)
         const origin = this.worldToScreen(0, 0);
-        ctx.strokeStyle = "rgba(99, 102, 241, 0.25)";
+        ctx.strokeStyle = "rgba(99, 102, 241, 0.2)";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(0, origin.y);
@@ -310,6 +407,31 @@ const FleetMap = {
         ctx.restore();
     },
 
+    drawRoadNetwork() {
+        if (!AppState.edges || !AppState.edges.length) return;
+        const ctx = this.ctx;
+        const stopMap = {};
+        AppState.stops.forEach(s => { stopMap[s.id] = s; });
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(51, 65, 85, 0.4)";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+
+        AppState.edges.forEach(e => {
+            const s1 = stopMap[e.from];
+            const s2 = stopMap[e.to];
+            if (!s1 || !s2) return;
+            const p1 = this.worldToScreen(s1.x, s1.y);
+            const p2 = this.worldToScreen(s2.x, s2.y);
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+        });
+        ctx.restore();
+    },
+
     drawRoutes() {
         if (!AppState.results || !AppState.results.routes) return;
 
@@ -318,20 +440,20 @@ const FleetMap = {
         const activeFilter = AppState.filterRouteBusId || "all";
 
         routes.forEach((route) => {
-            if (activeFilter !== "all" && route.bus_id !== activeFilter) return;
+            const isTarget = (activeFilter === "all" || route.bus_id === activeFilter);
+            if (!isTarget) return; // Completely hide other routes when a specific bus is selected!
 
             const itin = route.itinerary;
             if (!itin || itin.length < 2) return;
 
             ctx.save();
             ctx.strokeStyle = route.color || "#6366f1";
-            ctx.lineWidth = (activeFilter === route.bus_id) ? 3.5 : 2.5;
+            ctx.lineWidth = (activeFilter === route.bus_id) ? 4.0 : 2.8;
             ctx.lineJoin = "round";
             ctx.lineCap = "round";
 
-            // Glow for active route
             ctx.shadowColor = route.color || "#6366f1";
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = (activeFilter === route.bus_id) ? 14 : 6;
 
             ctx.beginPath();
             const startPt = this.worldToScreen(itin[0].x, itin[0].y);
@@ -357,9 +479,9 @@ const FleetMap = {
                 ctx.translate(midX, midY);
                 ctx.rotate(angle);
                 ctx.beginPath();
-                ctx.moveTo(-5, -4);
-                ctx.lineTo(4, 0);
-                ctx.lineTo(-5, 4);
+                ctx.moveTo(-6, -4.5);
+                ctx.lineTo(5, 0);
+                ctx.lineTo(-6, 4.5);
                 ctx.closePath();
                 ctx.fill();
                 ctx.restore();
@@ -371,35 +493,48 @@ const FleetMap = {
 
     drawStops() {
         const ctx = this.ctx;
+        const activeFilter = AppState.filterRouteBusId || "all";
+
+        let targetStopIds = null;
+        let routeColor = "#38bdf8";
+
+        if (activeFilter !== "all" && AppState.results && AppState.results.routes) {
+            const activeRoute = AppState.results.routes.find(r => r.bus_id === activeFilter);
+            if (activeRoute) {
+                targetStopIds = new Set(activeRoute.stops.map(s => s.id));
+                routeColor = activeRoute.color || "#6366f1";
+            }
+        }
+
         AppState.stops.forEach((stop) => {
+            const isAssigned = (targetStopIds === null || targetStopIds.has(stop.id));
             const pos = this.worldToScreen(stop.x, stop.y);
 
             ctx.save();
-            // Outer node halo
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(30, 41, 59, 0.9)";
+            ctx.arc(pos.x, pos.y, isAssigned ? 8.5 : 5, 0, Math.PI * 2);
+            ctx.fillStyle = isAssigned ? "rgba(30, 41, 59, 0.95)" : "rgba(15, 23, 42, 0.4)";
             ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = "#38bdf8";
+            ctx.lineWidth = isAssigned ? 2.2 : 1;
+            ctx.strokeStyle = isAssigned ? routeColor : "rgba(100, 116, 139, 0.3)";
             ctx.stroke();
 
             // Inner core
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
-            ctx.fillStyle = "#0284c7";
+            ctx.arc(pos.x, pos.y, isAssigned ? 4 : 2, 0, Math.PI * 2);
+            ctx.fillStyle = isAssigned ? routeColor : "rgba(100, 116, 139, 0.4)";
             ctx.fill();
 
-            // Label
-            ctx.font = "600 11px Inter, sans-serif";
-            ctx.fillStyle = "#cbd5e1";
-            ctx.textAlign = "center";
-            ctx.fillText(stop.name, pos.x, pos.y - 12);
+            if (isAssigned) {
+                ctx.font = "600 11px Inter, sans-serif";
+                ctx.fillStyle = "#f1f5f9";
+                ctx.textAlign = "center";
+                ctx.fillText(stop.name, pos.x, pos.y - 13);
 
-            // Students passenger pill
-            ctx.font = "500 10px Inter, sans-serif";
-            ctx.fillStyle = "#38bdf8";
-            ctx.fillText(`${stop.students}p`, pos.x, pos.y + 18);
+                ctx.font = "500 10px monospace";
+                ctx.fillStyle = routeColor;
+                ctx.fillText(`${stop.students}p`, pos.x, pos.y + 19);
+            }
 
             ctx.restore();
         });
@@ -412,34 +547,31 @@ const FleetMap = {
         const pos = this.worldToScreen(depotX, depotY);
 
         ctx.save();
-        // Pulsing glow rings
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 22, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(99, 102, 241, 0.15)";
+        ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(99, 102, 241, 0.18)";
         ctx.fill();
 
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 14, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, 13, 0, Math.PI * 2);
         ctx.fillStyle = "#4f46e5";
         ctx.shadowColor = "#6366f1";
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 14;
         ctx.fill();
         ctx.lineWidth = 2.5;
         ctx.strokeStyle = "#ffffff";
         ctx.stroke();
 
-        // Hub Icon / Text
-        ctx.font = "700 10px Inter, sans-serif";
+        ctx.font = "700 9px Inter, sans-serif";
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText("CAMPUS", pos.x, pos.y);
+        ctx.fillText("HUB", pos.x, pos.y);
 
-        // Depot label
         ctx.shadowBlur = 0;
-        ctx.font = "700 12px Inter, sans-serif";
+        ctx.font = "700 11px Inter, sans-serif";
         ctx.fillStyle = "#ffffff";
-        ctx.fillText(AppState.constraints.depot_name || "College Main Hub", pos.x, pos.y - 20);
+        ctx.fillText(AppState.constraints.depot_name || "Campus Main Hub", pos.x, pos.y - 18);
 
         ctx.restore();
     },
@@ -448,12 +580,17 @@ const FleetMap = {
         const ctx = this.ctx;
         const routes = AppState.results.routes;
         const t = this.simulationProgress;
+        const activeFilter = AppState.filterRouteBusId || "all";
 
         routes.forEach((route) => {
+            // Strictly simulate ONLY the chosen bus when filtered!
+            if (activeFilter !== "all" && route.bus_id !== activeFilter) {
+                return;
+            }
+
             const itin = route.itinerary;
             if (!itin || itin.length < 2) return;
 
-            // Compute vehicle position along polyline at fraction t
             const pos = this.interpolatePolyline(itin, t);
             if (!pos) return;
 
@@ -461,16 +598,16 @@ const FleetMap = {
 
             ctx.save();
             ctx.beginPath();
-            ctx.arc(screen.x, screen.y, 9, 0, Math.PI * 2);
+            ctx.arc(screen.x, screen.y, 11, 0, Math.PI * 2);
             ctx.fillStyle = route.color || "#6366f1";
             ctx.shadowColor = route.color || "#6366f1";
-            ctx.shadowBlur = 14;
+            ctx.shadowBlur = 16;
             ctx.fill();
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2.5;
             ctx.strokeStyle = "#ffffff";
             ctx.stroke();
 
-            // Vehicle Badge
+            // Vehicle Badge text
             ctx.font = "700 9px Inter, sans-serif";
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
@@ -484,7 +621,6 @@ const FleetMap = {
     interpolatePolyline(itinerary, progress) {
         if (itinerary.length === 1) return itinerary[0];
 
-        // Total path length
         let totalLen = 0;
         const segLens = [];
         for (let i = 0; i < itinerary.length - 1; i++) {
@@ -518,38 +654,31 @@ const FleetMap = {
         const item = hover.item;
         const pos = hover.screenPos;
 
-        const title = item.name;
-        const line2 = item.isDepot ? "Campus Hub & Depot" : `${item.students} students waiting`;
-        const line3 = `Coord: (${Number(item.x).toFixed(1)}, ${Number(item.y).toFixed(1)})`;
+        const hubDistText = item.isDepot ? '' : (item.is_hub_connected ? `Direct Hub: ${item.hub_distance}km` : 'Via Network Paths');
+        const line2 = item.isDepot ? "Campus Transit Depot" : `${item.students} students • ${hubDistText}`;
 
         ctx.save();
         ctx.font = "600 12px Inter, sans-serif";
         const w = Math.max(ctx.measureText(title).width, ctx.measureText(line2).width, 140) + 24;
-        const h = 64;
+        const h = 50;
         const x = pos.x + 14;
-        const y = pos.y - 32;
+        const y = pos.y - 25;
 
-        // Tooltip container
         ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
-        ctx.strokeStyle = "rgba(99, 102, 241, 0.4)";
+        ctx.strokeStyle = "rgba(99, 102, 241, 0.5)";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.roundRect(x, y, w, h, 8);
         ctx.fill();
         ctx.stroke();
 
-        // Tooltip text
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "left";
-        ctx.fillText(title, x + 12, y + 20);
+        ctx.fillText(title, x + 12, y + 18);
 
         ctx.font = "500 11px Inter, sans-serif";
         ctx.fillStyle = item.isDepot ? "#818cf8" : "#38bdf8";
-        ctx.fillText(line2, x + 12, y + 38);
-
-        ctx.font = "400 10px monospace";
-        ctx.fillStyle = "#94a3b8";
-        ctx.fillText(line3, x + 12, y + 54);
+        ctx.fillText(line2, x + 12, y + 36);
 
         ctx.restore();
     }

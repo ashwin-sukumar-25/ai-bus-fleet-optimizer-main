@@ -1,14 +1,13 @@
 /**
- * Sequential Tab and Stepper Controller
+ * Sequential Tab and Navigation Controller
  */
 const TabManager = {
     steps: [
-        { id: "fleet", stepNum: 1, label: "Fleet Vehicles", shortDesc: "Configure buses & capacities" },
-        { id: "stops", stepNum: 2, label: "Pickup Stops", shortDesc: "Define demand & coordinates" },
-        { id: "constraints", stepNum: 3, label: "Routing Policies", shortDesc: "Speed, fuel & AI constraints" },
-        { id: "dispatch", stepNum: 4, label: "Dispatch Manifest", shortDesc: "AI itinerary & bus assignments" },
-        { id: "map", stepNum: 5, label: "Interactive Fleet Map", shortDesc: "Visual 2D routing & simulation" },
-        { id: "analytics", stepNum: 6, label: "Fleet Telemetry", shortDesc: "Cost, occupancy & sustainability" }
+        { id: "fleet", stepNum: 1, label: "Fleet Vehicles", shortDesc: "Buses, capacities & drivers" },
+        { id: "stops", stepNum: 2, label: "Pickup Stops & Network", shortDesc: "Stops, graph edges & distances" },
+        { id: "constraints", stepNum: 3, label: "Route Settings", shortDesc: "Campus hub & parameters" },
+        { id: "dispatch", stepNum: 4, label: "Dispatch Manifest", shortDesc: "Bus routes & student riders" },
+        { id: "map", stepNum: 5, label: "Route Visualizer", shortDesc: "Interactive map & flow" }
     ],
 
     currentTab: "fleet",
@@ -33,11 +32,10 @@ const TabManager = {
         if (!stepObj) return;
 
         // If user tries to jump to results tabs before optimizing, inform them
-        if ((tabId === "dispatch" || tabId === "map" || tabId === "analytics") && !AppState.results) {
+        if ((tabId === "dispatch" || tabId === "map") && !AppState.results) {
             if (window.showToast) {
-                showToast("Please run the AI optimizer first to view routes and telemetry.", "info");
+                showToast("Please run the optimizer first to generate routes.", "info");
             }
-            // If they are on step 1 or 2, proceed to constraints
             if (this.currentTab === "fleet" || this.currentTab === "stops") {
                 this.switchTab("constraints");
                 return;
@@ -62,11 +60,14 @@ const TabManager = {
         this.updateStepperUI();
 
         // Trigger tab-specific component callbacks
+        if (tabId === "stops" && window.StopsManager) {
+            setTimeout(() => {
+                window.StopsManager.resizeCanvas();
+                window.StopsManager.fitGraphToData();
+            }, 50);
+        }
         if (tabId === "map" && window.FleetMap) {
             setTimeout(() => window.FleetMap.resizeAndRender(), 50);
-        }
-        if (tabId === "analytics" && window.AnalyticsDashboard) {
-            setTimeout(() => window.AnalyticsDashboard.render(), 50);
         }
         if (tabId === "dispatch" && window.OptimizerView) {
             window.OptimizerView.render();
@@ -99,7 +100,6 @@ const TabManager = {
                 return;
             }
         } else if (this.currentTab === "constraints") {
-            // Trigger optimization
             if (window.runOptimization) {
                 window.runOptimization();
             }
@@ -131,19 +131,18 @@ const TabManager = {
             const isCurrent = step.id === this.currentTab;
             const isCompleted = step.stepNum < currentNum || (AppState.results && step.stepNum <= 3);
 
-            // Styling state classes
             if (isCurrent) {
-                btn.className = "step-item group flex items-center gap-3 px-4 py-2.5 rounded-xl border border-indigo-500/40 bg-indigo-500/10 text-white font-medium transition-all shadow-md shadow-indigo-950/40";
+                btn.className = "step-item group flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 text-white font-medium transition-all shadow-md shadow-indigo-950/40";
                 const badge = btn.querySelector(".step-badge");
-                if (badge) badge.className = "step-badge flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white text-xs font-bold shadow-inner";
+                if (badge) badge.className = "step-badge flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs font-bold shadow-inner";
             } else if (isCompleted) {
-                btn.className = "step-item group flex items-center gap-3 px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 hover:text-white hover:border-slate-700 transition-all cursor-pointer";
+                btn.className = "step-item group flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 hover:text-white hover:border-slate-700 transition-all cursor-pointer";
                 const badge = btn.querySelector(".step-badge");
-                if (badge) badge.className = "step-badge flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold";
+                if (badge) badge.className = "step-badge flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold";
             } else {
-                btn.className = "step-item group flex items-center gap-3 px-4 py-2.5 rounded-xl border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 transition-all cursor-pointer";
+                btn.className = "step-item group flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 transition-all cursor-pointer";
                 const badge = btn.querySelector(".step-badge");
-                if (badge) badge.className = "step-badge flex items-center justify-center w-7 h-7 rounded-lg bg-slate-800 text-slate-400 text-xs font-medium";
+                if (badge) badge.className = "step-badge flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 text-slate-400 text-xs font-medium";
             }
         });
     }

@@ -1,6 +1,5 @@
 /**
- * Master Application Controller for AI College Bus Fleet Optimizer
- * Orchestrates modules, API interaction, scenario presets, toasts, and hotkeys.
+ * Master Application Controller for OptiFleet
  */
 
 // Toast notification utility
@@ -30,13 +29,11 @@ function showToast(message, type = "info") {
     container.appendChild(toast);
     if (window.lucide) window.lucide.createIcons();
 
-    // Trigger animate in
     requestAnimationFrame(() => {
         toast.classList.remove("translate-y-4", "opacity-0");
         toast.classList.add("translate-y-0", "opacity-100");
     });
 
-    // Auto dismiss after 3.5s
     setTimeout(() => {
         toast.classList.remove("translate-y-0", "opacity-100");
         toast.classList.add("translate-y-2", "opacity-0");
@@ -49,6 +46,7 @@ window.showToast = showToast;
 async function runOptimization(autoSwitch = true) {
     const buses = FleetManager.getBusesFromUI();
     const stops = StopsManager.getStopsFromUI();
+    const edges = AppState.edges || [];
 
     if (!buses.length) {
         if (autoSwitch) {
@@ -66,26 +64,22 @@ async function runOptimization(autoSwitch = true) {
         return;
     }
 
-    // Read constraints from inputs
+    // Read operational parameters
     const constraints = {
         max_bus_occupancy: parseInt(document.getElementById("inputMaxOccupancy")?.value) || 55,
-        average_speed: parseFloat(document.getElementById("inputAverageSpeed")?.value) || 30,
+        average_speed: parseFloat(document.getElementById("inputAverageSpeed")?.value) || 32,
         fuel_price: parseFloat(document.getElementById("inputFuelPrice")?.value) || 96.5,
         fuel_efficiency: parseFloat(document.getElementById("inputFuelEfficiency")?.value) || 4.5,
         traffic_congestion: parseFloat(document.getElementById("inputTrafficFactor")?.value) || 1.15,
-        dwell_time: parseFloat(document.getElementById("inputDwellTime")?.value) || 1.5,
         departure_time: document.getElementById("inputDepartureTime")?.value || "07:15",
         depot_name: document.getElementById("inputDepotName")?.value || "CIT Main Campus",
         depot_x: parseFloat(document.getElementById("inputDepotX")?.value) || 0,
-        depot_y: parseFloat(document.getElementById("inputDepotY")?.value) || 0,
-        algorithm: document.getElementById("selectAlgorithm")?.value || "2opt",
-        allocation_mode: document.getElementById("selectAllocationMode")?.value || "proximity"
+        depot_y: parseFloat(document.getElementById("inputDepotY")?.value) || 0
     };
 
     AppState.constraints = constraints;
     AppState.saveToStorage();
 
-    // Show Loading state only if user explicitly triggered it
     const overlay = document.getElementById("globalLoadingOverlay");
     if (autoSwitch && overlay) overlay.classList.remove("hidden");
 
@@ -93,20 +87,19 @@ async function runOptimization(autoSwitch = true) {
         const response = await fetch("/optimize", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ buses, stops, constraints })
+            body: JSON.stringify({ buses, stops, edges, constraints })
         });
 
         const data = await response.json();
 
         if (!data.success) {
-            if (autoSwitch) showToast(data.error || "Optimization calculation failed.", "error");
+            if (autoSwitch) showToast(data.error || "Optimization error occurred.", "error");
             return;
         }
 
         AppState.results = data.result;
         AppState.unlockedSteps.add(4);
         AppState.unlockedSteps.add(5);
-        AppState.unlockedSteps.add(6);
 
         // Update UI views
         OptimizerView.render();
@@ -116,60 +109,22 @@ async function runOptimization(autoSwitch = true) {
         const s = data.result.summary;
 
         if (autoSwitch) {
-            // Switch automatically to Step 4: Dispatch Manifest
             TabManager.switchTab("dispatch");
-            showToast(`AI Fleet Optimized: ${s.used_buses} buses dispatched (${s.served_percentage}% demand satisfied)`, "success");
+            showToast(`Fleet Optimized: ${s.used_buses} buses dispatched (${s.served_students} students accommodated)`, "success");
         }
 
-        // Update Top Header Pill
         const pillStatus = document.getElementById("headerPillStatus");
         if (pillStatus) {
-            pillStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Solved (${s.overall_occupancy}%)`;
+            pillStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Dispatched (${s.overall_occupancy}%)`;
         }
     } catch (err) {
-        console.error("Fetch error:", err);
-        if (autoSwitch) showToast("Could not connect to optimization server.", "error");
+        console.error("Optimization error:", err);
+        if (autoSwitch) showToast("Could not connect to optimization service.", "error");
     } finally {
         if (overlay) overlay.classList.add("hidden");
     }
 }
 window.runOptimization = runOptimization;
-
-// Scenario Preset Loader
-async function fetchServerPresets() {
-    try {
-        const res = await fetch("/api/presets");
-        const data = await res.json();
-        if (data.success) {
-            AppState.serverPresets = data.presets;
-        }
-    } catch (e) {
-        console.warn("Could not fetch server presets:", e);
-    }
-}
-
-function loadScenario(presetKey) {
-    if (!presetKey) return;
-    const preset = AppState.serverPresets[presetKey];
-    if (!preset) return;
-
-    AppState.setPreset(preset);
-
-    // Sync input fields in constraints form
-    syncConstraintsToInputs();
-
-    // Re-render UI modules
-    FleetManager.renderBusList();
-    StopsManager.renderStopsTable();
-    FleetMap.fitToData();
-
-    if (AppState.results) {
-        OptimizerView.render();
-    }
-
-    showToast(`Loaded scenario: ${preset.name}`, "info");
-}
-window.loadScenario = loadScenario;
 
 function syncConstraintsToInputs() {
     const c = AppState.constraints;
@@ -183,36 +138,25 @@ function syncConstraintsToInputs() {
     setVal("inputFuelPrice", c.fuel_price);
     setVal("inputFuelEfficiency", c.fuel_efficiency);
     setVal("inputTrafficFactor", c.traffic_congestion);
-    setVal("inputDwellTime", c.dwell_time);
     setVal("inputDepartureTime", c.departure_time);
     setVal("inputDepotName", c.depot_name);
     setVal("inputDepotX", c.depot_x);
     setVal("inputDepotY", c.depot_y);
-    setVal("selectAlgorithm", c.algorithm);
-    setVal("selectAllocationMode", c.allocation_mode);
 }
 
 // App Initialization on DOM Ready
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Load cached state if available
+    // 1. Load state from storage
     AppState.loadFromStorage();
 
-    // 2. Fetch server presets
-    await fetchServerPresets();
-
-    // 3. Initialize UI sub-modules
+    // 2. Initialize UI sub-modules
     FleetManager.init();
     StopsManager.init();
     FleetMap.init();
     TabManager.init();
     syncConstraintsToInputs();
 
-    // 4. Bind Top Header Actions
-    const presetSelect = document.getElementById("selectScenarioPreset");
-    if (presetSelect) {
-        presetSelect.addEventListener("change", (e) => loadScenario(e.target.value));
-    }
-
+    // 3. Header Action Buttons
     const btnOptimizeHeader = document.getElementById("btnOptimizeHeader");
     if (btnOptimizeHeader) {
         btnOptimizeHeader.addEventListener("click", () => runOptimization());
@@ -220,10 +164,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const btnResetFleet = document.getElementById("btnResetFleet");
     if (btnResetFleet) {
-        btnResetFleet.addEventListener("click", () => {
-            if (confirm("Reset current fleet configuration and reload standard demo?")) {
-                localStorage.removeItem("optifleet_state_v2");
-                location.reload();
+        btnResetFleet.addEventListener("click", async () => {
+            if (confirm("Reset fleet and network to default demo configuration?")) {
+                localStorage.removeItem("optifleet_v3_state");
+                try {
+                    const res = await fetch("/api/default-demo");
+                    const data = await res.json();
+                    if (data.success) {
+                        AppState.resetToDefaultDemo(data.data);
+                        location.reload();
+                    }
+                } catch (e) {
+                    location.reload();
+                }
             }
         });
     }
@@ -236,13 +189,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // Initialize Lucide icons
     if (window.lucide) {
         window.lucide.createIcons();
     }
 
-    // Auto-run baseline optimization in background so results are instantly populated
+    // Auto-run baseline optimization in background
     setTimeout(() => {
         runOptimization(false);
-    }, 400);
+    }, 350);
 });

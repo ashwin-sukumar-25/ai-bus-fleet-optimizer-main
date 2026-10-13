@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OptiFleet AI — Enterprise College Bus Fleet Optimizer</title>
+    <title>OptiFleet — College Bus Fleet Dispatch & Route Optimizer</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,9 +29,6 @@
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Chart.js CDN for telemetry graphs -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <!-- Custom CSS styling -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 </head>
@@ -47,46 +44,32 @@
                     <i data-lucide="bus" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-base font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-200 bg-clip-text text-transparent">OptiFleet AI</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">ENTERPRISE v2.4</span>
-                    </div>
-                    <p class="text-xs text-slate-400 hidden sm:block">Intelligent College Fleet Routing & Capacity Allocation</p>
+                    <span class="text-base font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-200 bg-clip-text text-transparent">OptiFleet</span>
+                    <p class="text-xs text-slate-400 hidden sm:block">College Bus Fleet Dispatch & Route Optimizer</p>
                 </div>
             </div>
 
-            <!-- Global Status Pills & Demo Scenario Selector -->
+            <!-- Global Status Pills & Primary Action -->
             <div class="flex items-center gap-3">
                 
-                <!-- Quick Demo Scenarios -->
-                <div class="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5">
-                    <i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i>
-                    <span class="text-xs text-slate-400 font-medium">Scenario:</span>
-                    <select id="selectScenarioPreset" class="bg-transparent text-xs text-indigo-300 font-semibold focus:outline-none cursor-pointer">
-                        <option value="coimbatore" selected>Coimbatore Tech Campus</option>
-                        <option value="morning_peak">Morning Peak Metro</option>
-                        <option value="rural_sparse">Suburban & Rural Transit</option>
-                    </select>
-                </div>
-
-                <!-- Global Live Metrics Pills -->
+                <!-- Live Metrics Pills -->
                 <div class="hidden lg:flex items-center gap-2">
-                    <span id="headerPillBuses" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">5 Buses</span>
-                    <span id="headerPillDemand" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">218 Students</span>
-                    <span id="headerPillSeats" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">240 Seats</span>
-                    <span id="headerPillStatus" class="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs font-medium text-indigo-300 flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span> Ready
+                    <span id="headerPillBuses" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">5 Buses</span>
+                    <span id="headerPillDemand" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">173 Students</span>
+                    <span id="headerPillSeats" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">240 Seats</span>
+                    <span id="headerPillStatus" class="px-2.5 py-1 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs font-medium text-indigo-300 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Ready
                     </span>
                 </div>
 
                 <!-- Primary Optimize Action Button -->
                 <div class="flex items-center gap-2">
-                    <button id="btnResetFleet" type="button" title="Reset Fleet to Default" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors">
+                    <button id="btnResetFleet" type="button" title="Reset Demo Data" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors">
                         <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                     </button>
-                    <button id="btnOptimizeHeader" type="button" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs sm:text-sm font-bold shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all">
+                    <button id="btnOptimizeHeader" type="button" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all">
                         <i data-lucide="sparkles" class="w-4 h-4"></i>
-                        <span>Run AI Optimizer</span>
+                        <span>Run Optimizer</span>
                     </button>
                 </div>
             </div>
@@ -110,8 +93,8 @@
                 <button type="button" data-tab-target="stops" class="step-item group flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-transparent text-slate-400 hover:text-slate-200 text-xs font-medium transition-all">
                     <span class="step-badge flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 text-slate-400 text-xs">2</span>
                     <div class="text-left">
-                        <div>Pickup Stops</div>
-                        <div class="text-[10px] text-slate-500 font-normal">Demand & Coordinates</div>
+                        <div>Pickup Stops & Network</div>
+                        <div class="text-[10px] text-slate-500 font-normal">Stops, Edges & Distances</div>
                     </div>
                 </button>
 
@@ -120,8 +103,8 @@
                 <button type="button" data-tab-target="constraints" class="step-item group flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-transparent text-slate-400 hover:text-slate-200 text-xs font-medium transition-all">
                     <span class="step-badge flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 text-slate-400 text-xs">3</span>
                     <div class="text-left">
-                        <div>Routing Policies</div>
-                        <div class="text-[10px] text-slate-500 font-normal">Speed, Fuel & AI Engine</div>
+                        <div>Route Settings</div>
+                        <div class="text-[10px] text-slate-500 font-normal">Campus Hub & Speed</div>
                     </div>
                 </button>
 
@@ -131,7 +114,7 @@
                     <span class="step-badge flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 text-slate-400 text-xs">4</span>
                     <div class="text-left">
                         <div>Dispatch Manifest</div>
-                        <div class="text-[10px] text-slate-500 font-normal">Routes & ETAs</div>
+                        <div class="text-[10px] text-slate-500 font-normal">Bus Routes & Riders</div>
                     </div>
                 </button>
 
@@ -140,18 +123,8 @@
                 <button type="button" data-tab-target="map" class="step-item group flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-transparent text-slate-400 hover:text-slate-200 text-xs font-medium transition-all">
                     <span class="step-badge flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 text-slate-400 text-xs">5</span>
                     <div class="text-left">
-                        <div>Interactive Map</div>
-                        <div class="text-[10px] text-slate-500 font-normal">2D Visual Route Vectors</div>
-                    </div>
-                </button>
-
-                <div class="w-4 h-[1px] bg-slate-800"></div>
-
-                <button type="button" data-tab-target="analytics" class="step-item group flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-transparent text-slate-400 hover:text-slate-200 text-xs font-medium transition-all">
-                    <span class="step-badge flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 text-slate-400 text-xs">6</span>
-                    <div class="text-left">
-                        <div>Fleet Telemetry</div>
-                        <div class="text-[10px] text-slate-500 font-normal">Cost & Sustainability</div>
+                        <div>Route Visualizer</div>
+                        <div class="text-[10px] text-slate-500 font-normal">Interactive Map & Flow</div>
                     </div>
                 </button>
 
@@ -167,14 +140,13 @@
         <!-- ========================================== -->
         <section id="panel-fleet" class="tab-panel space-y-6">
             
-            <!-- Fleet Overview Banner -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
                     <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
                         <i data-lucide="bus" class="w-6 h-6 text-indigo-400"></i>
-                        Fleet Configuration & Asset Registry
+                        Fleet Configuration
                     </h2>
-                    <p class="text-sm text-slate-400 mt-1">Configure college transit buses, seating capacities, driver assignments, and fuel types.</p>
+                    <p class="text-sm text-slate-400 mt-1">Configure buses, seating capacities, fuel types, and assigned drivers.</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <button id="btnAddBus" type="button" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-indigo-950">
@@ -189,10 +161,10 @@
                 <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
                     <div class="text-xs font-medium text-slate-400 flex items-center justify-between">
                         <span>TOTAL BUSES IN FLEET</span>
-                        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
+                        <i data-lucide="bus" class="w-4 h-4 text-indigo-400"></i>
                     </div>
                     <div id="statFleetCount" class="text-3xl font-extrabold text-white mt-2">5</div>
-                    <div class="text-xs text-slate-500 mt-1">Available transit assets</div>
+                    <div class="text-xs text-slate-500 mt-1">Available transit vehicles</div>
                 </div>
 
                 <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
@@ -201,47 +173,51 @@
                         <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i>
                     </div>
                     <div id="statTotalSeats" class="text-3xl font-extrabold text-white mt-2">240</div>
-                    <div class="text-xs text-slate-500 mt-1">Aggregate commuter seats</div>
+                    <div class="text-xs text-slate-500 mt-1">Total seats across all buses</div>
                 </div>
 
                 <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
                     <div class="text-xs font-medium text-slate-400 flex items-center justify-between">
-                        <span>ELECTRIC / GREEN BUSES</span>
+                        <span>ELECTRIC BUSES</span>
                         <i data-lucide="zap" class="w-4 h-4 text-emerald-400"></i>
                     </div>
                     <div id="statEvBuses" class="text-3xl font-extrabold text-emerald-400 mt-2">1 / 5</div>
-                    <div class="text-xs text-slate-500 mt-1">Zero-tailpipe transit ratio</div>
+                    <div class="text-xs text-slate-500 mt-1">Electric vehicle ratio</div>
                 </div>
             </div>
 
             <!-- Bus Cards Grid -->
             <div id="fleetContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <!-- Dynamically populated by fleet.js -->
+                <!-- Populated by fleet.js -->
             </div>
 
             <!-- Bottom Step Navigation -->
             <div class="pt-6 border-t border-slate-800 flex justify-end">
                 <button type="button" onclick="TabManager.nextStep()" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition-all shadow-lg shadow-indigo-600/30">
-                    <span>Next: Pickup Stops & Demand</span>
+                    <span>Next: Pickup Stops & Network</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </div>
         </section>
 
         <!-- ========================================== -->
-        <!-- TAB 2: PICKUP STOPS & DEMAND -->
+        <!-- TAB 2: PICKUP STOPS & ROAD NETWORK GRAPH -->
         <!-- ========================================== -->
         <section id="panel-stops" class="tab-panel hidden space-y-6">
             
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
                     <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-                        <i data-lucide="map-pin" class="w-6 h-6 text-indigo-400"></i>
-                        Pickup Stops & Commuter Demand
+                        <i data-lucide="git-fork" class="w-6 h-6 text-indigo-400"></i>
+                        Pickup Stops & Road Network
                     </h2>
-                    <p class="text-sm text-slate-400 mt-1">Manage boarding points, student passenger counts, and relative map coordinates.</p>
+                    <p class="text-sm text-slate-400 mt-1">Place pickup stops on the graph space, connect possible paths with exact kilometers, and set hub distances.</p>
                 </div>
                 <div class="flex items-center gap-3">
+                    <button id="btnAddEdgeDirect" type="button" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs sm:text-sm font-semibold transition-all">
+                        <i data-lucide="link" class="w-4 h-4 text-sky-400"></i>
+                        Connect Path
+                    </button>
                     <button id="btnAddStop" type="button" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-indigo-950">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         Add Pickup Stop
@@ -249,15 +225,77 @@
                 </div>
             </div>
 
+            <!-- Interactive Network Graph Space -->
+            <div class="border border-slate-800 rounded-3xl overflow-hidden bg-slate-950 shadow-2xl space-y-0">
+                
+                <!-- Graph Toolbar -->
+                <div class="p-3.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400 font-semibold mr-1">Graph Tools:</span>
+                        <button id="btnGraphModeSelect" type="button" class="px-3 py-1.5 rounded-xl bg-indigo-600 border border-indigo-500 text-white font-semibold transition-all flex items-center gap-1.5">
+                            <i data-lucide="move" class="w-3.5 h-3.5"></i>
+                            Select & Move
+                        </button>
+                        <button id="btnGraphModeAdd" type="button" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                            + Place Stop
+                        </button>
+                        <button id="btnGraphModeConnect" type="button" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                            <i data-lucide="git-commit" class="w-3.5 h-3.5"></i>
+                            ⇄ Connect Path
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <span id="graphModeStatusText" class="text-slate-400 text-[11px] hidden md:inline">
+                            Drag to pan canvas, drag stops to reposition.
+                        </span>
+                        <button id="btnGraphFit" type="button" title="Center & Fit View" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-colors flex items-center gap-1">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                            <span>Fit</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas -->
+                <div class="relative w-full h-[440px]">
+                    <canvas id="stopsGraphCanvas" class="w-full h-[440px] block cursor-grab"></canvas>
+                    
+                    <div class="absolute bottom-3 left-3 p-2.5 rounded-xl bg-slate-950/80 backdrop-blur-md border border-slate-800 text-[11px] text-slate-400 pointer-events-none flex items-center gap-3">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Campus Depot Hub
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> Pickup Stop
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-4 h-0.5 bg-sky-400"></span> Road Path (km)
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-4 h-0.5 border-t border-dashed border-indigo-400"></span> Hub Distance (km)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Active Road Connections Chips Bar -->
+                <div class="p-3.5 bg-slate-950 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto text-xs no-scrollbar">
+                    <span class="text-slate-400 font-semibold whitespace-nowrap">Active Road Paths:</span>
+                    <div id="activeEdgesContainer" class="flex items-center gap-2">
+                        <!-- Populated by stops.js -->
+                    </div>
+                </div>
+
+            </div>
+
             <!-- Stops Summary Badges -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
                     <div class="text-xs font-medium text-slate-400 flex items-center justify-between">
                         <span>PICKUP STOPS</span>
-                        <i data-lucide="navigation" class="w-4 h-4 text-indigo-400"></i>
+                        <i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i>
                     </div>
-                    <div id="statStopsCount" class="text-3xl font-extrabold text-white mt-2">10</div>
-                    <div class="text-xs text-slate-500 mt-1">Waypoints requiring service</div>
+                    <div id="statStopsCount" class="text-3xl font-extrabold text-white mt-2">8</div>
+                    <div class="text-xs text-slate-500 mt-1">Waypoints to be serviced</div>
                 </div>
 
                 <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
@@ -265,8 +303,8 @@
                         <span>STUDENTS COMMUTING</span>
                         <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i>
                     </div>
-                    <div id="statTotalDemand" class="text-3xl font-extrabold text-white mt-2">218</div>
-                    <div class="text-xs text-slate-500 mt-1">Total riders to allocate</div>
+                    <div id="statTotalDemand" class="text-3xl font-extrabold text-white mt-2">173</div>
+                    <div class="text-xs text-slate-500 mt-1">Total student commuters</div>
                 </div>
 
                 <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
@@ -275,11 +313,11 @@
                         <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400"></i>
                     </div>
                     <div id="statAvgDemand" class="text-3xl font-extrabold text-white mt-2">22 / stop</div>
-                    <div class="text-xs text-slate-500 mt-1">Mean riders per location</div>
+                    <div class="text-xs text-slate-500 mt-1">Mean students per stop</div>
                 </div>
             </div>
 
-            <!-- Search & Filters -->
+            <!-- Search -->
             <div class="flex items-center justify-between gap-4">
                 <div class="relative flex-1 max-w-md">
                     <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
@@ -287,7 +325,7 @@
                         class="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 focus:border-indigo-500 text-sm text-slate-200 placeholder-slate-500 transition-all">
                 </div>
                 <div class="text-xs text-slate-400 hidden sm:block">
-                    Coordinates (X, Y) are in kilometers relative to the college hub.
+                    Hub distance & connected paths are directly editable in the table.
                 </div>
             </div>
 
@@ -300,8 +338,8 @@
                                 <th class="py-3 px-4">Stop ID</th>
                                 <th class="py-3 px-4">Location Name</th>
                                 <th class="py-3 px-4">Student Commuters</th>
-                                <th class="py-3 px-4">Relative Coords (X, Y)</th>
-                                <th class="py-3 px-4">Hub Distance</th>
+                                <th class="py-3 px-4">Hub Connection (Direct Road)</th>
+                                <th class="py-3 px-4">Connected Paths (Edges)</th>
                                 <th class="py-3 px-4 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -319,23 +357,34 @@
                     <span>Previous: Fleet</span>
                 </button>
                 <button type="button" onclick="TabManager.nextStep()" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition-all shadow-lg shadow-indigo-600/30">
-                    <span>Next: Routing Policies</span>
+                    <span>Next: Route Settings</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </div>
         </section>
 
         <!-- ========================================== -->
-        <!-- TAB 3: ROUTING POLICIES & CONSTRAINTS -->
+        <!-- TAB 3: ROUTE SETTINGS & CONSTRAINTS -->
         <!-- ========================================== -->
         <section id="panel-constraints" class="tab-panel hidden space-y-6">
             
             <div class="pb-6 border-b border-slate-800">
                 <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-                    <i data-lucide="sliders" class="w-6 h-6 text-indigo-400"></i>
-                    Optimization Constraints & Operational Policies
+                    <i data-lucide="settings-2" class="w-6 h-6 text-indigo-400"></i>
+                    Route & Operational Settings
                 </h2>
-                <p class="text-sm text-slate-400 mt-1">Calibrate AI solver algorithms, transit speed, depot hub coordinates, and environmental factors.</p>
+                <p class="text-sm text-slate-400 mt-1">Configure campus depot hub, transit speed, vehicle fuel mileage, and departure timing.</p>
+            </div>
+
+            <!-- Objective Goal Banner -->
+            <div class="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/30 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shrink-0">
+                    <i data-lucide="compass" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white">Optimization Objective</h3>
+                    <p class="text-xs text-slate-300">Minimizes total fuel consumption and overall travel distance across the road network while adhering to bus seating limits.</p>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -343,45 +392,16 @@
                 <!-- Left 2 Cols: Form Inputs -->
                 <div class="lg:col-span-2 space-y-6">
                     
-                    <!-- AI Solver Core Configuration -->
-                    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-5">
-                        <div class="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
-                            <i data-lucide="cpu" class="w-4 h-4"></i>
-                            AI Routing Heuristics & Solver Engine
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">TSP Routing Heuristic</label>
-                                <select id="selectAlgorithm" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:border-indigo-500 transition-all">
-                                    <option value="2opt" selected>2-Opt Local Search (Recommended)</option>
-                                    <option value="nearest_neighbor">Greedy Nearest Neighbor (Fast)</option>
-                                    <option value="clarke_wright">Clarke-Wright Savings VRP</option>
-                                </select>
-                                <p class="text-[11px] text-slate-500 mt-1">Iteratively untangles crossed path vectors for 15-20% shorter routes.</p>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Bus Allocation Strategy</label>
-                                <select id="selectAllocationMode" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:border-indigo-500 transition-all">
-                                    <option value="proximity" selected>Proximity Cluster Seeding (Geo-Smart)</option>
-                                    <option value="greedy_capacity">Greedy Capacity Bin-Packing</option>
-                                </select>
-                                <p class="text-[11px] text-slate-500 mt-1">Groups geographically adjacent pickup stops to prevent zigzag detours.</p>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Campus Depot Hub Configuration -->
                     <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-5">
                         <div class="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
                             <i data-lucide="building" class="w-4 h-4"></i>
-                            College Campus Depot Origin
+                            Campus Depot Origin Hub
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Campus Depot Name</label>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Campus Hub Name</label>
                                 <input type="text" id="inputDepotName" value="CIT Main Campus"
                                     class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:border-indigo-500 transition-all">
                             </div>
@@ -404,7 +424,7 @@
                     <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-5">
                         <div class="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
                             <i data-lucide="gauge" class="w-4 h-4"></i>
-                            Operational & Sustainability Metrics
+                            Operational & Fuel Parameters
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -455,9 +475,9 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Traffic Congestion</label>
                                 <select id="inputTrafficFactor" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 transition-all">
-                                    <option value="1.0">1.0x (Free Flow)</option>
+                                    <option value="1.0">1.0x (Normal)</option>
                                     <option value="1.15" selected>1.15x (Morning Peak)</option>
-                                    <option value="1.3">1.3x (Heavy Jam)</option>
+                                    <option value="1.3">1.3x (Heavy Traffic)</option>
                                 </select>
                             </div>
                         </div>
@@ -465,49 +485,36 @@
 
                 </div>
 
-                <!-- Right Col: Pre-flight Summary Card & Trigger Action -->
+                <!-- Right Col: Summary Card & Trigger Action -->
                 <div class="space-y-6">
                     <div class="p-6 rounded-2xl bg-gradient-to-b from-indigo-950/40 via-slate-900/80 to-slate-900 border border-indigo-500/30 shadow-2xl relative overflow-hidden">
                         <div class="flex items-center gap-2.5 text-indigo-300 text-sm font-bold mb-4">
                             <i data-lucide="check-circle-2" class="w-5 h-5 text-indigo-400"></i>
-                            Pre-Flight Solver Checklist
+                            Fleet Summary
                         </div>
 
                         <div class="space-y-3 text-xs text-slate-300">
                             <div class="flex items-center justify-between py-2 border-b border-slate-800">
                                 <span>Configured Buses</span>
-                                <span class="font-bold text-white"><span id="preflightBuses">5</span> Vehicles</span>
+                                <span class="font-bold text-white"><span id="preflightBuses">5</span> Buses</span>
                             </div>
                             <div class="flex items-center justify-between py-2 border-b border-slate-800">
-                                <span>Total Commuter Demand</span>
-                                <span class="font-bold text-white"><span id="preflightDemand">218</span> Students</span>
+                                <span>Student Commuters</span>
+                                <span class="font-bold text-white"><span id="preflightDemand">173</span> Students</span>
                             </div>
                             <div class="flex items-center justify-between py-2 border-b border-slate-800">
-                                <span>Aggregate Seating</span>
+                                <span>Total Seating Capacity</span>
                                 <span class="font-bold text-emerald-400"><span id="preflightCapacity">240</span> Seats</span>
-                            </div>
-                            <div class="flex items-center justify-between py-2 border-b border-slate-800">
-                                <span>Buffer Headroom</span>
-                                <span class="font-bold text-emerald-400">+22 Seats Reserve</span>
                             </div>
                         </div>
 
                         <div class="mt-6 pt-4 border-t border-slate-800/80">
-                            <button type="button" onclick="runOptimization()" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 flex items-center justify-center gap-2 transition-all group">
-                                <i data-lucide="sparkles" class="w-4 h-4 group-hover:rotate-12 transition-transform"></i>
-                                <span>EXECUTE AI FLEET OPTIMIZER</span>
+                            <button type="button" onclick="runOptimization()" class="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 flex items-center justify-center gap-2 transition-all group">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <span>Run Optimizer</span>
                             </button>
                             <p class="text-center text-[11px] text-slate-400 mt-2.5">Shortcut: <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">Ctrl + Enter</kbd></p>
                         </div>
-                    </div>
-
-                    <!-- Algorithmic Insights Callout -->
-                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-2">
-                        <div class="font-semibold text-slate-200 flex items-center gap-2">
-                            <i data-lucide="info" class="w-4 h-4 text-indigo-400"></i>
-                            Operations Research Optimization
-                        </div>
-                        <p>The solver formulates this as a Capacitated Vehicle Routing Problem (CVRP). It allocates clustered seed points to minimize empty transit legs, then optimizes stops sequentially using 2-Opt local search.</p>
                     </div>
                 </div>
 
@@ -520,7 +527,7 @@
                     <span>Previous: Stops</span>
                 </button>
                 <button type="button" onclick="runOptimization()" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition-all shadow-lg shadow-indigo-600/30">
-                    <span>Run Optimizer & Dispatch</span>
+                    <span>Run Optimizer</span>
                     <i data-lucide="sparkles" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -535,9 +542,9 @@
                 <div>
                     <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
                         <i data-lucide="calendar-clock" class="w-6 h-6 text-indigo-400"></i>
-                        AI Fleet Dispatch Manifest & Route Schedules
+                        Fleet Dispatch Manifest & Route Schedules
                     </h2>
-                    <p class="text-sm text-slate-400 mt-1">Review generated routes, driver assignments, occupancy ratios, and export manifests.</p>
+                    <p class="text-sm text-slate-400 mt-1">Review optimal routes for each bus, number of students onboard, travel distance, and fuel consumption.</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
                     <button type="button" onclick="OptimizerView.exportCsv()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-200 transition-colors">
@@ -574,17 +581,17 @@
             <div class="pt-6 border-t border-slate-800 flex items-center justify-between">
                 <button type="button" onclick="TabManager.switchTab('constraints')" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-sm font-medium transition-colors">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    <span>Adjust Policies</span>
+                    <span>Adjust Settings</span>
                 </button>
                 <button type="button" onclick="TabManager.switchTab('map')" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition-all shadow-lg shadow-indigo-600/30">
-                    <span>View Interactive 2D Map</span>
+                    <span>View Route Visualizer</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </div>
         </section>
 
         <!-- ========================================== -->
-        <!-- TAB 5: INTERACTIVE 2D FLEET ROUTE MAP -->
+        <!-- TAB 5: INTERACTIVE ROUTE VISUALIZER -->
         <!-- ========================================== -->
         <section id="panel-map" class="tab-panel hidden space-y-6">
             
@@ -592,21 +599,13 @@
                 <div>
                     <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
                         <i data-lucide="map" class="w-6 h-6 text-indigo-400"></i>
-                        Interactive 2D Fleet Route Visualizer
+                        Interactive Route Visualizer
                     </h2>
-                    <p class="text-sm text-slate-400 mt-1">Inspect color-coded route corridors, central depot hub, and simulate vehicle transit.</p>
+                    <p class="text-sm text-slate-400 mt-1">Inspect color-coded corridors for each bus, focus on a specific vehicle, and simulate route transit.</p>
                 </div>
 
                 <!-- Map Action Controls -->
                 <div class="flex items-center gap-2 flex-wrap">
-                    <!-- Bus Route Filter -->
-                    <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5">
-                        <i data-lucide="filter" class="w-3.5 h-3.5 text-slate-400"></i>
-                        <select id="mapBusFilter" class="bg-transparent text-xs text-slate-200 font-semibold focus:outline-none cursor-pointer">
-                            <option value="all">All Bus Routes</option>
-                        </select>
-                    </div>
-
                     <button id="btnMapSimulate" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition-all shadow">
                         <i data-lucide="play" class="w-4 h-4"></i>
                         Simulate Route Flow
@@ -626,26 +625,43 @@
                 </div>
             </div>
 
+            <!-- Bus Filter Pills Bar (Quickly focus on a particular bus) -->
+            <div class="flex items-center gap-2 flex-wrap pb-1">
+                <span class="text-xs text-slate-400 font-semibold mr-1">Focus Bus:</span>
+                <div id="mapBusPillsContainer" class="flex items-center gap-2 flex-wrap">
+                    <!-- Populated by map.js -->
+                </div>
+                <!-- Native fallback select (hidden or secondary) -->
+                <select id="mapBusFilter" class="hidden">
+                    <option value="all">All Bus Routes</option>
+                </select>
+            </div>
+
+            <!-- Focused Bus Summary Banner (shows when a bus is picked) -->
+            <div id="mapFocusedBusCard" class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl hidden space-y-2">
+                <!-- Populated dynamically by map.js -->
+            </div>
+
             <!-- Canvas Container -->
             <div class="relative border border-slate-800 rounded-3xl overflow-hidden shadow-2xl bg-slate-950">
                 <canvas id="fleetMapCanvas" class="w-full h-[560px] block cursor-grab"></canvas>
 
                 <!-- Floating Canvas Overlay Badges -->
-                <div class="absolute bottom-4 left-4 p-3 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-slate-800/80 text-xs space-y-1.5 shadow-xl pointer-events-none">
+                <div class="absolute bottom-4 left-4 p-3 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-slate-800/80 text-xs space-y-1 shadow-xl pointer-events-none">
                     <div class="flex items-center gap-2 text-indigo-300 font-bold">
-                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></span>
-                        Live Interactive Visualizer
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                        Route Visualizer
                     </div>
                     <div class="text-[11px] text-slate-400">
-                        • Drag to pan canvas, scroll wheel to zoom.<br>
-                        • Hover over nodes to inspect commuter details.
+                        • Select a bus pill above to view only that bus's corridor.<br>
+                        • Drag canvas to pan, scroll wheel to zoom.
                     </div>
                 </div>
 
                 <div class="absolute top-4 right-4 p-3 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-slate-800/80 text-xs shadow-xl pointer-events-none flex items-center gap-4 text-slate-300">
                     <div class="flex items-center gap-2">
                         <span class="w-3 h-3 rounded-full bg-indigo-500 border border-white"></span>
-                        <span>College Hub</span>
+                        <span>Campus Hub</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
@@ -653,7 +669,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="w-4 h-0.5 bg-indigo-400"></span>
-                        <span>Transit Corridor</span>
+                        <span>Bus Corridor</span>
                     </div>
                 </div>
             </div>
@@ -664,44 +680,6 @@
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     <span>Previous: Manifest</span>
                 </button>
-                <button type="button" onclick="TabManager.switchTab('analytics')" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition-all shadow-lg shadow-indigo-600/30">
-                    <span>View Telemetry & Sustainability</span>
-                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </button>
-            </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- TAB 6: FLEET TELEMETRY & ANALYTICS -->
-        <!-- ========================================== -->
-        <section id="panel-analytics" class="tab-panel hidden space-y-6">
-            
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
-                <div>
-                    <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-                        <i data-lucide="bar-chart-3" class="w-6 h-6 text-indigo-400"></i>
-                        Fleet Telemetry & Sustainability Analytics
-                    </h2>
-                    <p class="text-sm text-slate-400 mt-1">Deep analytics on load balance, mileage efficiency, fuel expenditure, and carbon reduction.</p>
-                </div>
-                <div>
-                    <button type="button" onclick="OptimizerView.exportCsv()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-200 transition-colors">
-                        <i data-lucide="download" class="w-4 h-4 text-indigo-400"></i>
-                        Download Full Telemetry Report
-                    </button>
-                </div>
-            </div>
-
-            <div id="analyticsDashboardContent">
-                <!-- Populated dynamically by analytics.js -->
-            </div>
-
-            <!-- Bottom Step Navigation -->
-            <div class="pt-6 border-t border-slate-800 flex items-center justify-between">
-                <button type="button" onclick="TabManager.switchTab('map')" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-sm font-medium transition-colors">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    <span>Previous: Route Map</span>
-                </button>
                 <button type="button" onclick="TabManager.switchTab('fleet')" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-sm font-bold transition-all">
                     <span>Back to Fleet Setup</span>
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
@@ -710,6 +688,167 @@
         </section>
 
     </main>
+
+    <!-- ========================================== -->
+    <!-- MODAL CARD 1: ADD / EDIT PICKUP STOP CARD -->
+    <!-- ========================================== -->
+    <div id="modalStopCard" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center hidden p-4">
+        <div class="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-5 animate-in fade-in duration-200">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalStopCardTitle" class="text-base font-bold text-white">Add Pickup Stop</h3>
+                        <p class="text-xs text-slate-400">Configure waypoint demand and road connectivity</p>
+                    </div>
+                </div>
+                <button type="button" onclick="StopsManager.closeStopModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="formStopCard" onsubmit="event.preventDefault(); StopsManager.saveStopFromModal();" class="space-y-4">
+                <input type="hidden" id="cardStopEditIndex" value="-1">
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Stop ID</label>
+                        <input type="text" id="cardStopId" required
+                            class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono font-bold text-indigo-300 focus:border-indigo-500">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Stop Location Name</label>
+                        <input type="text" id="cardStopName" required placeholder="e.g. Peelamedu Junction"
+                            class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Student Commuters (Demand)</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="document.getElementById('cardStopStudents').value = Math.max(1, (parseInt(document.getElementById('cardStopStudents').value) || 20) - 2)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm">-</button>
+                        <input type="number" id="cardStopStudents" min="1" max="150" value="20" required
+                            class="flex-1 text-center py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm font-semibold text-slate-100">
+                        <button type="button" onclick="document.getElementById('cardStopStudents').value = (parseInt(document.getElementById('cardStopStudents').value) || 20) + 2" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm">+</button>
+                    </div>
+                </div>
+
+                <!-- Hub Connectivity Card Section -->
+                <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="building" class="w-4 h-4 text-indigo-400"></i>
+                            <span class="text-xs font-semibold text-slate-200">Campus Hub Connection</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="cardStopHubConnected" class="sr-only peer" onchange="StopsManager.toggleCardHubInput(this.checked)">
+                            <div class="w-10 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    <div id="cardStopHubDistanceContainer" class="space-y-1.5 hidden pt-1 border-t border-slate-800/60">
+                        <label class="block text-[11px] font-medium text-slate-400">Direct Road Distance to Campus Hub</label>
+                        <div class="relative">
+                            <input type="number" step="0.1" min="0.1" id="cardStopHubDistance" placeholder="e.g. 5.5"
+                                class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono font-semibold text-indigo-300">
+                            <span class="absolute right-3 top-2 text-xs text-slate-500 font-mono">km</span>
+                        </div>
+                    </div>
+                    <p id="cardStopHubNotice" class="text-[11px] text-slate-500">
+                        Stop is not directly connected to the hub. It reaches the campus through connected road network paths.
+                    </p>
+                </div>
+
+                <!-- Relative Canvas Coordinates -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Graph Position X</label>
+                        <input type="number" step="0.1" id="cardStopX" value="0.0"
+                            class="w-full px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Graph Position Y</label>
+                        <input type="number" step="0.1" id="cardStopY" value="0.0"
+                            class="w-full px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                    <button type="button" onclick="StopsManager.closeStopModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-all shadow-md shadow-indigo-600/30">
+                        Save Pickup Stop
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL CARD 2: CONNECT ROAD PATH (EDGE) CARD -->
+    <!-- ========================================== -->
+    <div id="modalEdgeCard" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center hidden p-4">
+        <div class="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-5 animate-in fade-in duration-200">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-sky-600/20 text-sky-400 flex items-center justify-center">
+                        <i data-lucide="git-commit" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalEdgeCardTitle" class="text-base font-bold text-white">Connect Road Path</h3>
+                        <p class="text-xs text-slate-400">Define possible transit path and distance in kilometers</p>
+                    </div>
+                </div>
+                <button type="button" onclick="StopsManager.closeEdgeModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="formEdgeCard" onsubmit="event.preventDefault(); StopsManager.saveEdgeFromModal();" class="space-y-4">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">From Stop / Origin</label>
+                        <select id="cardEdgeFrom" required class="w-full">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">To Destination Stop</label>
+                        <select id="cardEdgeTo" required class="w-full">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Road Travel Distance</label>
+                        <div class="relative">
+                            <input type="number" step="0.1" min="0.1" id="cardEdgeDistance" required placeholder="e.g. 4.2"
+                                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm font-mono font-semibold text-sky-300">
+                            <span class="absolute right-3.5 top-2.5 text-xs text-slate-500 font-mono">km</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-800">
+                    <button type="button" id="btnDeleteEdgeFromModal" onclick="StopsManager.deleteCurrentEdgeFromModal()" class="px-3.5 py-2 rounded-xl text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-colors hidden">
+                        Delete Path
+                    </button>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button type="button" onclick="StopsManager.closeEdgeModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition-all shadow-md shadow-sky-600/30">
+                            Save Road Path
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Global Loading Overlay -->
     <div id="globalLoadingOverlay" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center hidden">
@@ -721,8 +860,8 @@
                 </div>
             </div>
             <div>
-                <h3 class="text-base font-bold text-white">Computing Fleet Optimization...</h3>
-                <p class="text-xs text-slate-400 mt-1">Executing Capacitated VRP & 2-Opt local search heuristics across pickup waypoints.</p>
+                <h3 class="text-base font-bold text-white">Computing Fleet Routes...</h3>
+                <p class="text-xs text-slate-400 mt-1">Optimizing bus routes to minimize fuel consumption and total distance.</p>
             </div>
         </div>
     </div>
@@ -734,7 +873,6 @@
     <script src="{{ url_for('static', filename='js/stops.js') }}"></script>
     <script src="{{ url_for('static', filename='js/map.js') }}"></script>
     <script src="{{ url_for('static', filename='js/optimizer-view.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
